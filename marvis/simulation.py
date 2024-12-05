@@ -137,6 +137,11 @@ class Simulation:
         routing_helper = internet.Ipv4GlobalRoutingHelper
         routing_helper.PopulateRoutingTables()
 
+    def __start_nodes(self):
+        logger.info('Starting nodes.')
+        for node in self.scenario.nodes():
+            node.start(self)
+
     def __stop_workflows(self):
         """Stop all running workflows."""
         logger.info('Stopping Workflows.')
@@ -191,6 +196,7 @@ class Simulation:
             logger.info('Simulating until process gets stopped')
 
         def run_simulation():
+            self.__start_nodes()
             if simulation_time is not None:
                 core.Simulator.Stop(core.Seconds(simulation_time))
             core.Simulator.Run()

@@ -147,7 +147,7 @@ class DockerNode(Node):
     def prepare(self, simulation):
         """This runs a setup on network interfaces and starts the container."""
         logger.info('Preparing node %s', self.name)
-        
+
         try:
             self.build_docker_image()
         except docker.errors.BuildError as exception:
@@ -159,8 +159,13 @@ class DockerNode(Node):
                 self.name)
             return
         else:
-            self.start_docker_container(simulation.log_directory, simulation.hosts)
+            self.create_docker_container(simulation.log_directory, simulation.hosts)
             self.setup_host_interfaces()
+
+    def start(self, simulation):
+        """Start the paused container."""
+        logger.debug("Starting container for node %s.", self.name)
+        self.container.start(remove=True)
 
     def build_docker_image(self):
         """Build the image for the container."""
@@ -172,7 +177,7 @@ class DockerNode(Node):
                 dockerfile=self.dockerfile,
                 rm=True,
                 nocache=False,
-            )[0]                
+            )[0]
 
         elif isinstance(self.docker_image, str):
             if not self.pull:
@@ -189,8 +194,8 @@ class DockerNode(Node):
 
         self.docker_image.tag(self.docker_image_tag)
 
-    def start_docker_container(self, log_directory, hosts=None):
-        """Start the docker container.
+    def create_docker_container(self, log_directory, hosts=None):
+        """Create the docker container.
 
         All docker containers are labeled with "ns-3" as the creator.
 
@@ -201,18 +206,17 @@ class DockerNode(Node):
         hosts : dict
             A dictionary with hostnames as keys and IP addresses (a list) as value.
         """
-        logger.info('Starting docker container: %s', self.name)
+        logger.info('Creating docker container: %s', self.name)
         client = docker.from_env()
 
         extra_hosts = [f'{name}:{address}' for name, addresses in hosts.items() for address in addresses]
 
-        self.container = client.containers.run(
+        self.container = client.containers.create(
             self.docker_image_tag,
             name=self.name,
             hostname=self.name,
             labels={"created-by": "ns-3"},
 
-            remove=True,
             auto_remove=True,
             detach=True,
 

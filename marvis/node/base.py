@@ -107,6 +107,16 @@ class Node:
         """
         raise NotImplementedError
 
+    def start(self, simulation):
+        """Do all neccesary steps to actually start a node for the simulation.
+
+        Parameters
+        ----------
+        simulation : :class:`.Simulation`
+            The simulation to prepare the node for.
+        """
+        raise NotImplementedError
+
     def wants_ip_stack(self):
         """Indicates whether a IP stack shall be installed onto the node.
 
